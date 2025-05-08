@@ -5,6 +5,8 @@ using UnityEngine.InputSystem;
 
 public class InputManager : MonoBehaviour
 {
+    public static PlayerInput PlayerInputComponent;
+
     public static Vector2 MovementDirection;
     public static bool JumpPressed;
     public static bool JumpHeld;
@@ -13,16 +15,26 @@ public class InputManager : MonoBehaviour
     InputAction moveAction;
     InputAction jumpAction;
 
+    void Awake()
+    {
+        PlayerInputComponent = GetComponent<PlayerInput>();
 
-    // Start is called before the first frame update
+        moveAction = PlayerInputComponent.actions["Move"];
+        jumpAction = PlayerInputComponent.actions["Jump"];
+
+    }
+
     void Start()
     {
 
     }
 
-    // Update is called once per frame
     void Update()
     {
+        MovementDirection = moveAction.ReadValue<Vector2>();
 
+        JumpPressed = jumpAction.WasPressedThisFrame();
+        JumpHeld = jumpAction.IsPressed();
+        JumpReleased = jumpAction.WasReleasedThisFrame();
     }
 }

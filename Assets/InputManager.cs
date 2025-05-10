@@ -5,23 +5,22 @@ using UnityEngine.InputSystem;
 
 public class InputManager : MonoBehaviour
 {
-    public static PlayerInput PlayerInputComponent;
+    public static PlayerInput playerInputComponent;
 
-    public static Vector2 MovementDirection;
-    public static bool JumpPressed;
-    public static bool JumpHeld;
-    public static bool JumpReleased;
+    public static Vector2 movementDirection;
+    public static bool jumpPressed;
+    public static bool jumpHeld;
+    public static bool jumpReleased;
 
     InputAction moveAction;
     InputAction jumpAction;
 
     void Awake()
     {
-        PlayerInputComponent = GetComponent<PlayerInput>();
+        playerInputComponent = GetComponent<PlayerInput>();
 
-        moveAction = PlayerInputComponent.actions["Move"];
-        jumpAction = PlayerInputComponent.actions["Jump"];
-
+        moveAction = playerInputComponent.actions["Move"];
+        jumpAction = playerInputComponent.actions["Jump"];
     }
 
     void Start()
@@ -31,10 +30,10 @@ public class InputManager : MonoBehaviour
 
     void Update()
     {
-        MovementDirection = moveAction.ReadValue<Vector2>();
+        movementDirection = moveAction.ReadValue<Vector2>();
 
-        JumpPressed = jumpAction.WasPressedThisFrame();
-        JumpHeld = jumpAction.IsPressed();
-        JumpReleased = jumpAction.WasReleasedThisFrame();
+        jumpPressed = jumpAction.WasPressedThisFrame();
+        jumpHeld = jumpAction.IsPressed();
+        jumpReleased = jumpAction.WasReleasedThisFrame();
     }
 }

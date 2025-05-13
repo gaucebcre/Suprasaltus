@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Burst.Intrinsics;
+using Unity.VisualScripting.Antlr3.Runtime.Tree;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
@@ -15,9 +17,10 @@ public class PlayerMovement : MonoBehaviour
     bool isFacingRight;
 
     // collision variables
-    public ContactFilter2D contactFilter;
     bool isGrounded;
+    public ContactFilter2D isGroundedContactFilter;
     bool bumpedHead;
+    public ContactFilter2D bumpedHeadContactFilter;
 
     // jump variables
     public float verticalVelocity { get; private set; }
@@ -26,7 +29,7 @@ public class PlayerMovement : MonoBehaviour
     bool isFalling;
     float fastFallTime;
     float fastFallReleaseSpeed;
-    bool numberOfJumpsUsed;
+    int numberOfJumpsUsed;
 
     // apex variables
     float apexPoint;
@@ -142,28 +145,168 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
+        // jump with buffering and coyote time
         if (jumpBufferTimer > 0f && !isJumping && (isGrounded || coyoteTimer > 0f))
         {
-            // CONTINUE 11:35
+            InitiateJump(1);
+
+            // grounded jump
+            if (jumpReleaseDuringBuffer)
+            {
+                isFastFalling = true;
+                fastFallReleaseSpeed = verticalVelocity;
+            }
         }
+        else // double jump
+        if (jumpBufferTimer > 0f && isJumping && numberOfJumpsUsed < playerMoveStats.numberOfJumpsAllowed)
+        {
+            isFastFalling = false;
+            InitiateJump(1);
+        }
+        else // air jump after coyote
+        if (jumpBufferTimer <= 0f && isFalling && numberOfJumpsUsed < playerMoveStats.numberOfJumpsAllowed)
+        {
+            isFastFalling = false;
+            InitiateJump(2);
+        }
+
+        // landing
+        if ((isJumping || isFacingRight) && isGrounded && verticalVelocity <= 0f)
+        {
+            isJumping = false;
+            isFalling = false;
+            isFastFalling = false;
+            fastFallTime = 0f;
+            isPastApexThreshhold = false;
+            numberOfJumpsUsed = 0;
+
+            verticalVelocity = Physics2D.gravity.y;
+        }
+    }
+
+    void InitiateJump(int jumps)
+    {
+        if (!isJumping)
+        {
+            isJumping = true;
+        }
+        jumpBufferTimer = 0f;
+        numberOfJumpsUsed += jumps;
+        verticalVelocity = playerMoveStats.initialJumpVelocity;
     }
 
     void Jump()
     {
+        if (isJumping)
+        {
+            if (bumpedHead)
+            {
+                isFastFalling = true;
+            }
 
+            // gravity ascending
+            if (verticalVelocity >= 0f)
+            {
+                // apex
+                apexPoint = Mathf.InverseLerp(playerMoveStats.initialJumpVelocity, 0f, verticalVelocity);
+
+                if (apexPoint > playerMoveStats.apexThreshhold)
+                {
+                    if (!isPastApexThreshhold)
+                    {
+                        isPastApexThreshhold = true;
+                        timePastApexThreshold = 0f;
+                    }
+
+                    if (isPastApexThreshhold)
+                    {
+                        timePastApexThreshold += Time.fixedDeltaTime;
+                        if (timePastApexThreshold < playerMoveStats.apexHangTime)
+                        {
+                            verticalVelocity = 0f;
+                        }
+                        else
+                        {
+                            verticalVelocity = -0.01f;
+                        }
+                    }
+                }
+                else // gravity ascending before apex
+                {
+                    verticalVelocity += playerMoveStats.gravity * Time.fixedDeltaTime;
+                    if (isPastApexThreshhold)
+                    {
+                        isPastApexThreshhold = false;
+                    }
+                }
+            }
+            else // gravity descending
+            if (!isFastFalling)
+            { // TODO: test without gravityonreleasemulti
+                verticalVelocity += playerMoveStats.gravity * playerMoveStats.gravityOnReleaseMultiplier * Time.fixedDeltaTime;
+            }
+            else // falling
+            if (verticalVelocity < 0f)
+            {
+                if (!isFastFalling)
+                {
+                    isFastFalling = true;
+                }
+            }
+        }
+
+        // jump cut
+        if (isFastFalling)
+        {
+            if (fastFallTime <= playerMoveStats.timeForUpwardsCancel)
+            {
+                verticalVelocity += playerMoveStats.gravity * playerMoveStats.gravityOnReleaseMultiplier * Time.fixedDeltaTime;
+            }
+            else
+            if (fastFallTime < playerMoveStats.timeForUpwardsCancel)
+            {
+                verticalVelocity = Mathf.Lerp(fastFallReleaseSpeed, 0f, (fastFallTime / playerMoveStats.timeForUpwardsCancel));
+            }
+
+            fastFallTime += Time.fixedDeltaTime;
+        }
+
+        // normal falling gravity
+        if (!isGrounded && !isJumping)
+        {
+            if (!isFalling)
+            {
+                isFalling = true;
+            }
+
+            verticalVelocity += playerMoveStats.gravity * Time.fixedDeltaTime;
+        }
+
+        // clamp fall speed
+        verticalVelocity = Mathf.Clamp(verticalVelocity, -playerMoveStats.maxFallSpeed, 50f);
+
+        rb2d.velocity = new Vector2(rb2d.velocity.x, verticalVelocity);
     }
 
     #endregion
 
     #region Collision Methods
+
+
     void CollisionChecks()
     {
         IsGrounded();
+        BumpedHead();
+    }
+
+    void BumpedHead()
+    {
+        bumpedHead = rb2d.IsTouching(bumpedHeadContactFilter);
     }
 
     void IsGrounded()
     {
-        isGrounded = rb2d.IsTouching(contactFilter);
+        isGrounded = rb2d.IsTouching(isGroundedContactFilter);
     }
 
 

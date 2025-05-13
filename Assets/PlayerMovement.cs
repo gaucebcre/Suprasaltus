@@ -72,7 +72,7 @@ public class PlayerMovement : MonoBehaviour
         {
             Move(playerMoveStats.groundAcceleration, playerMoveStats.groundDeceleration, InputManager.movementDirection);
         }
-        else
+        else // airborne
         {
             Move(playerMoveStats.airAcceleration, playerMoveStats.airDeceleration, InputManager.movementDirection);
         }
@@ -84,7 +84,10 @@ public class PlayerMovement : MonoBehaviour
     {
         if (moveInput != Vector2.zero)
         {
-            Turn(moveInput);
+            if (TurnCheck(moveInput.x))
+            {
+                Turn();
+            }
 
             Vector2 targetVel = Vector2.zero;
             targetVel = new Vector2(moveInput.x, 0f) * playerMoveStats.maxWalkSpeed;
@@ -101,7 +104,16 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    void Turn(Vector2 moveInput)
+    bool TurnCheck(float moveInputX)
+    {
+        if ((isFacingRight && moveInputX < 0) || (!isFacingRight && moveInputX > 0))
+        {
+            return true;
+        }
+        return false;
+    }
+
+    void Turn() // player must always start facing right
     {
         // https://stackoverflow.com/questions/26568542/flipping-a-2d-sprite-animation-in-unity-2d#26577124 
         Vector3 theScale = transform.localScale;
@@ -113,7 +125,6 @@ public class PlayerMovement : MonoBehaviour
     #endregion
 
     #region Jump
-
     void JumpChecks()
     {
         if (InputManager.jumpPressed)

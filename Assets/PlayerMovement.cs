@@ -17,19 +17,19 @@ public class PlayerMovement : MonoBehaviour
     bool isFacingRight;
 
     // collision variables
-    bool isGrounded;
-    public ContactFilter2D isGroundedContactFilter;
-    bool bumpedHead;
-    public ContactFilter2D bumpedHeadContactFilter;
+    [SerializeField] bool isGrounded = false;
+    [SerializeField] ContactFilter2D isGroundedContactFilter;
+    [SerializeField] bool bumpedHead;
+    [SerializeField] ContactFilter2D bumpedHeadContactFilter;
 
     // jump variables
     public float verticalVelocity { get; private set; }
-    bool isJumping;
-    bool isFastFalling;
-    bool isFalling;
-    float fastFallTime;
-    float fastFallReleaseSpeed;
-    int numberOfJumpsUsed;
+    [SerializeField] bool isJumping;
+    [SerializeField] bool isFastFalling;
+    [SerializeField] bool isFalling;
+    [SerializeField] float fastFallTime;
+    [SerializeField] float fastFallReleaseSpeed;
+    [SerializeField] int numberOfJumpsUsed;
 
     // apex variables
     float apexPoint;
@@ -54,7 +54,17 @@ public class PlayerMovement : MonoBehaviour
 
     void Start()
     {
-
+        // if default, initialize ContactFilters (they keep resetting, so here)
+        if (isGroundedContactFilter.Equals(new ContactFilter2D()))
+        {
+            isGroundedContactFilter.SetLayerMask(playerMoveStats.groundLayerMask);
+            isGroundedContactFilter.SetNormalAngle(45f, 135f);
+        }
+        if (bumpedHeadContactFilter.Equals(new ContactFilter2D()))
+        {
+            bumpedHeadContactFilter.SetLayerMask(playerMoveStats.groundLayerMask);
+            bumpedHeadContactFilter.SetNormalAngle(225f, 315f);
+        }
     }
 
     void Update()
@@ -132,10 +142,12 @@ public class PlayerMovement : MonoBehaviour
             jumpBufferTimer = playerMoveStats.jumpBufferTime;
             jumpReleaseDuringBuffer = false;
         }
+        // from now on, instead of checking for input, we check for bufferTimer
+        bool jumpBuffered = jumpBufferTimer > 0f ? true : false;
 
         if (InputManager.jumpReleased)
         {
-            if (jumpBufferTimer > 0f)
+            if (jumpBuffered)
             {
                 jumpReleaseDuringBuffer = true;
             }
@@ -157,7 +169,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // jump with buffering and coyote time
-        if (jumpBufferTimer > 0f && !isJumping && (isGrounded || coyoteTimer > 0f))
+        if (jumpBuffered && !isJumping && (isGrounded || coyoteTimer > 0f))
         {
             InitiateJump(1);
 
@@ -169,13 +181,13 @@ public class PlayerMovement : MonoBehaviour
             }
         }
         else // double jump
-        if (jumpBufferTimer > 0f && isJumping && numberOfJumpsUsed < playerMoveStats.numberOfJumpsAllowed)
+        if (jumpBuffered && isJumping && numberOfJumpsUsed < playerMoveStats.numberOfJumpsAllowed)
         {
             isFastFalling = false;
             InitiateJump(1);
         }
         else // air jump after coyote
-        if (jumpBufferTimer <= 0f && isFalling && numberOfJumpsUsed < playerMoveStats.numberOfJumpsAllowed)
+        if (jumpBufferTimer >= 0f && isFalling && numberOfJumpsUsed < playerMoveStats.numberOfJumpsAllowed)
         {
             isFastFalling = false;
             InitiateJump(2);
@@ -269,7 +281,7 @@ public class PlayerMovement : MonoBehaviour
         // jump cut
         if (isFastFalling)
         {
-            if (fastFallTime <= playerMoveStats.timeForUpwardsCancel)
+            if (fastFallTime >= playerMoveStats.timeForUpwardsCancel)
             {
                 verticalVelocity += playerMoveStats.gravity * playerMoveStats.gravityOnReleaseMultiplier * Time.fixedDeltaTime;
             }

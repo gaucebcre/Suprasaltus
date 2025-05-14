@@ -17,17 +17,15 @@ public class PlayerMovementStats : ScriptableObject
 
     [Header("Grounded/Collision Checks")]
     public LayerMask groundLayerMask;
-    public float groundDetectionRayLength = 0.02f;
-    public float headDetectionRayLength = 0.02f;
-    [Range(0f, 1f)] public float headWidth = 0.75f;
 
     [Header("Jump")]
     public float jumpHeight = 6.5f;
+    public float minimumJumpHeight = 2f;
     [Range(1f, 1.1f)] public float jumpHeightCompensationFactor = 1.05f;
     public float timeTillJumpApex = 0.4f;
     [Range(0.01f, 5f)] public float gravityOnReleaseMultiplier = 2f;
     public float maxFallSpeed = 26f;
-    [Range(1f, 5f)] public float numberOfJumpsAllowed = 2;
+    [Range(1f, 5f)] public int numberOfJumpsAllowed = 2;
 
     [Header("Jump Cut")]
     [Range(0.02f, 0.3f)] public float timeForUpwardsCancel = 0.027f;
@@ -53,14 +51,14 @@ public class PlayerMovementStats : ScriptableObject
     public float initialJumpVelocity { get; private set; }
     public float adjustedJumpHeight { get; private set; }
 
-    void Oalidate()
+    void OnValidate()
     {
-
+        CalculateValues();
     }
 
     void OnEnable()
     {
-
+        CalculateValues();
     }
 
     void CalculateValues()

@@ -20,14 +20,14 @@ MonoBehaviour:
   groundLayerMask:
     serializedVersion: 2
     m_Bits: 1
-  jumpHeight: 4
-  minimumJumpHeight: 2
+  jumpHeight: 2
   jumpHeightCompensationFactor: 1.05
   timeTillJumpApex: 1
   gravityOnReleaseMultiplier: 0.5
   maxFallSpeed: 2
   numberOfJumpsAllowed: 2
-  timeForUpwardsCancel: 0.051
+  timeForUpwardsCancel: 0.027
+  minJumpCutPercent: 0.5
   apexThreshhold: 0.995
   apexHangTime: 0.1
   jumpBufferTime: 0.125

@@ -25,10 +25,11 @@ public class PlayerMovement : MonoBehaviour
     // jump variables
     public float verticalVelocity { get; private set; }
     [SerializeField] bool isJumping;
-    [SerializeField] bool isFastFalling;
+    [SerializeField] float jumpTime;
+    [SerializeField] bool doJumpCut;
     [SerializeField] bool isFalling;
-    [SerializeField] float fastFallTime;
-    [SerializeField] float fastFallReleaseSpeed;
+    [SerializeField] float jumpCutTime;
+    [SerializeField] float jumpCutReleaseSpeed;
     [SerializeField] int numberOfJumpsUsed;
 
     // apex variables
@@ -142,64 +143,67 @@ public class PlayerMovement : MonoBehaviour
             jumpBufferTimer = playerMoveStats.jumpBufferTime;
             jumpReleaseDuringBuffer = false;
         }
+
         // from now on, instead of checking for input, we check for bufferTimer
-        bool jumpBuffered = jumpBufferTimer > 0f ? true : false;
+        bool jumpWasBuffered = jumpBufferTimer > 0f ? true : false;
 
         if (InputManager.jumpReleased)
         {
-            if (jumpBuffered)
-            {
+            if (jumpWasBuffered)
                 jumpReleaseDuringBuffer = true;
-            }
-            if (isJumping && verticalVelocity > 0f)
+
+            bool isMovingUp = verticalVelocity > 0f;
+            if (isJumping && isMovingUp) //playerMoveStats.minJumpCutVelocity
             {
                 if (isPastApexThreshhold)
                 {
-                    isPastApexThreshhold = true;
-                    isFastFalling = true;
-                    fastFallTime = playerMoveStats.timeForUpwardsCancel;
+                    isPastApexThreshhold = false;
+                    doJumpCut = true;
+                    jumpCutTime = playerMoveStats.timeForUpwardsCancel;
                     verticalVelocity = 0f;
                 }
                 else
                 {
-                    isFastFalling = true;
-                    fastFallReleaseSpeed = verticalVelocity;
+                    doJumpCut = true;
+                    jumpCutReleaseSpeed = verticalVelocity;
                 }
             }
         }
 
-        // jump with buffering and coyote time
-        if (jumpBuffered && !isJumping && (isGrounded || coyoteTimer > 0f))
+        // grounded jump
+        bool theresCoyoteTimeLeft = coyoteTimer > 0f;
+        bool hasJumps = numberOfJumpsUsed < playerMoveStats.numberOfJumpsAllowed;
+        if (jumpWasBuffered && !isJumping && (isGrounded || theresCoyoteTimeLeft))
         {
             InitiateJump(1);
 
-            // grounded jump
             if (jumpReleaseDuringBuffer)
             {
-                isFastFalling = true;
-                fastFallReleaseSpeed = verticalVelocity;
+                doJumpCut = true; // trigger jump cut
+                jumpCutReleaseSpeed = verticalVelocity;
             }
         }
-        else // double jump
-        if (jumpBuffered && isJumping && numberOfJumpsUsed < playerMoveStats.numberOfJumpsAllowed)
+        else // air jump
+        if (jumpWasBuffered && isJumping && hasJumps)
         {
-            isFastFalling = false;
-            InitiateJump(1);
-        }
-        else // air jump after coyote
-        if (jumpBufferTimer >= 0f && isFalling && numberOfJumpsUsed < playerMoveStats.numberOfJumpsAllowed)
-        {
-            isFastFalling = false;
+            doJumpCut = false;
             InitiateJump(2);
+
+            if (jumpReleaseDuringBuffer) // needed to tap air jump
+            {
+                doJumpCut = true; // trigger jump cut
+                jumpCutReleaseSpeed = verticalVelocity;
+            }
         }
 
         // landing
-        if ((isJumping || isFacingRight) && isGrounded && verticalVelocity <= 0f)
+        bool isMovingDownOrStopped = verticalVelocity <= 0f;
+        if ((isJumping || isFalling) && isGrounded && isMovingDownOrStopped)
         {
             isJumping = false;
             isFalling = false;
-            isFastFalling = false;
-            fastFallTime = 0f;
+            doJumpCut = false;
+            jumpCutTime = 0f;
             isPastApexThreshhold = false;
             numberOfJumpsUsed = 0;
 
@@ -210,10 +214,10 @@ public class PlayerMovement : MonoBehaviour
     void InitiateJump(int jumps)
     {
         if (!isJumping)
-        {
             isJumping = true;
-        }
         jumpBufferTimer = 0f;
+        jumpTime = 0f;
+        jumpReleaseDuringBuffer = false; // to control air jump height
         numberOfJumpsUsed += jumps;
         verticalVelocity = playerMoveStats.initialJumpVelocity;
     }
@@ -224,7 +228,7 @@ public class PlayerMovement : MonoBehaviour
         {
             if (bumpedHead)
             {
-                isFastFalling = true;
+                doJumpCut = true;
             }
 
             // gravity ascending
@@ -264,34 +268,35 @@ public class PlayerMovement : MonoBehaviour
                 }
             }
             else // gravity descending
-            if (!isFastFalling)
+            if (!doJumpCut)
             { // TODO: test without gravityonreleasemulti
                 verticalVelocity += playerMoveStats.gravity * playerMoveStats.gravityOnReleaseMultiplier * Time.fixedDeltaTime;
             }
             else // falling
             if (verticalVelocity < 0f)
             {
-                if (!isFastFalling)
+                if (!doJumpCut)
                 {
-                    isFastFalling = true;
+                    doJumpCut = true;
                 }
             }
         }
 
-        // jump cut
-        if (isFastFalling)
+        // jump cut (will wait until the minimum height)
+        bool reachedMinimumJumpHeight = jumpTime > playerMoveStats.timeTillJumpApex * playerMoveStats.minJumpCutPercent;
+        if (doJumpCut)
         {
-            if (fastFallTime >= playerMoveStats.timeForUpwardsCancel)
+            if (jumpCutTime >= playerMoveStats.timeForUpwardsCancel)
             {
                 verticalVelocity += playerMoveStats.gravity * playerMoveStats.gravityOnReleaseMultiplier * Time.fixedDeltaTime;
             }
             else
-            if (fastFallTime < playerMoveStats.timeForUpwardsCancel)
+            if (jumpCutTime < playerMoveStats.timeForUpwardsCancel)
             {
-                verticalVelocity = Mathf.Lerp(fastFallReleaseSpeed, 0f, (fastFallTime / playerMoveStats.timeForUpwardsCancel));
+                verticalVelocity = Mathf.Lerp(jumpCutReleaseSpeed, 0f, (jumpCutTime / playerMoveStats.timeForUpwardsCancel));
             }
 
-            fastFallTime += Time.fixedDeltaTime;
+            jumpCutTime += Time.fixedDeltaTime;
         }
 
         // normal falling gravity
@@ -348,6 +353,11 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             coyoteTimer = playerMoveStats.jumpCoyoteTime;
+        }
+
+        if (isJumping)
+        {
+            jumpTime += Time.fixedDeltaTime;
         }
     }
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Mathematics;
@@ -20,7 +21,7 @@ public class PlayerMovementStats : ScriptableObject
 
     [Header("Jump")]
     public float jumpHeight = 6.5f;
-    public float minimumJumpHeight = 2f;
+    // public float minimumJumpHeight = 4f;
     [Range(1f, 1.1f)] public float jumpHeightCompensationFactor = 1.05f;
     public float timeTillJumpApex = 0.4f;
     [Range(0.01f, 5f)] public float gravityOnReleaseMultiplier = 2f;
@@ -29,6 +30,7 @@ public class PlayerMovementStats : ScriptableObject
 
     [Header("Jump Cut")]
     [Range(0.02f, 0.3f)] public float timeForUpwardsCancel = 0.027f;
+    [Range(0f, 1f)] public float minJumpCutPercent = 0.5f; // 0.5 = 50% of apex time
 
     [Header("Jump Apex")]
     [Range(0.5f, 1f)] public float apexThreshhold = 0.97f;
@@ -49,6 +51,7 @@ public class PlayerMovementStats : ScriptableObject
 
     public float gravity { get; private set; }
     public float initialJumpVelocity { get; private set; }
+    // public float minJumpCutVelocity { get; private set; }
     public float adjustedJumpHeight { get; private set; }
 
     void OnValidate()
@@ -68,5 +71,9 @@ public class PlayerMovementStats : ScriptableObject
         // formulae of https://www.youtube.com/watch?v=hG9SzQxaCm8
         gravity = -(2f * adjustedJumpHeight) / Mathf.Pow(timeTillJumpApex, 2f);
         initialJumpVelocity = Mathf.Abs(gravity) * timeTillJumpApex;
+
+        // float minHeight = Mathf.Max(0.01f, minimumJumpHeight);
+        // // v^2 = u^2 + 2as
+        // minJumpCutVelocity = Mathf.Sqrt(Mathf.Pow(initialJumpVelocity, 2) + 2 * gravity * (minHeight - adjustedJumpHeight));
     }
 }

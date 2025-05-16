@@ -701,7 +701,7 @@ Transform:
   m_GameObject: {fileID: 1642210147}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: -0.35633036, w: 0.9343601}
-  m_LocalPosition: {x: -0.77, y: -0.786, z: 0}
+  m_LocalPosition: {x: -6.35, y: -0.786, z: 0}
   m_LocalScale: {x: 13.86, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -857,7 +857,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c859bd6d8d3b434cbce9e8570020eb3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerMoveStats: {fileID: 11400000, guid: 05e028505845f75449ebecd4ef3b7e98, type: 2}
+  playerMoveStats: {fileID: 11400000, guid: 0b124d0d256ad924bb63bba4527c6fb1, type: 2}
   playerCollider: {fileID: 1932439023}
   isGrounded: 0
   isGroundedContactFilter:
@@ -890,10 +890,11 @@ MonoBehaviour:
     minNormalAngle: 225
     maxNormalAngle: 315
   isJumping: 0
-  isFastFalling: 0
+  jumpTime: 0
+  doJumpCut: 0
   isFalling: 0
-  fastFallTime: 0
-  fastFallReleaseSpeed: 0
+  jumpCutTime: 0
+  jumpCutReleaseSpeed: 0
   numberOfJumpsUsed: 0
 --- !u!212 &1932439022
 SpriteRenderer:
@@ -1071,7 +1072,7 @@ Transform:
   m_GameObject: {fileID: 1933320989}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: 0.49997842, w: 0.86603785}
-  m_LocalPosition: {x: 0.88, y: -0.786, z: 0}
+  m_LocalPosition: {x: 6.39, y: -0.786, z: 0}
   m_LocalScale: {x: 13.86, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

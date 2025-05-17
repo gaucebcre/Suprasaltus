@@ -10,28 +10,29 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6bd72e6c925a0ea47b2c6b01e35bd08e, type: 3}
-  m_Name: New Player Movement Stats 1
+  m_Name: Player Movement Stats
   m_EditorClassIdentifier: 
-  maxWalkSpeed: 5
-  groundAcceleration: 50
-  groundDeceleration: 8
-  airAcceleration: 95
-  airDeceleration: 99
+  maxWalkSpeed: 10
+  groundAcceleration: 100
+  groundDeceleration: 100
+  airAcceleration: 100
+  airDeceleration: 100
   groundLayerMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 1
   jumpHeight: 4
   jumpHeightCompensationFactor: 1.05
-  timeTillJumpApex: 0.1
+  timeTillJumpApex: 0.3
   gravityOnReleaseMultiplier: 2
-  maxFallSpeed: 100
-  numberOfJumpsAllowed: 2
-  timeForUpwardsCancel: 0.027
+  gravityOnLedgeFall: 1
+  maxFallSpeed: 40
+  numberOfJumpsAllowed: 1
+  timeForUpwardsCancel: 0.057
   minJumpCutPercent: 0.5
   apexThreshhold: 0.97
   apexHangTime: 0.075
   jumpBufferTime: 0.125
-  jumpCoyoteTime: 0.125
+  jumpCoyoteTime: 0.05
   showWalkJumpArc: 0
   stopOnCollision: 0
   drawRight: 0

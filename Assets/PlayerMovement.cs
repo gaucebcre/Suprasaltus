@@ -44,6 +44,8 @@ public class PlayerMovement : MonoBehaviour
     // coyote time variables
     float coyoteTimer;
 
+    // animation variables
+
     #region Unity Methods
     void Awake()
     {
@@ -306,8 +308,9 @@ public class PlayerMovement : MonoBehaviour
             {
                 isFalling = true;
             }
+            Debug.Log("falling normally");
 
-            verticalVelocity += playerMoveStats.gravity * Time.fixedDeltaTime;
+            verticalVelocity += playerMoveStats.gravity * playerMoveStats.gravityOnLedgeFall * Time.fixedDeltaTime;
         }
 
         // clamp fall speed
@@ -348,11 +351,11 @@ public class PlayerMovement : MonoBehaviour
 
         if (isGrounded)
         {
-            coyoteTimer -= Time.deltaTime;
+            coyoteTimer = playerMoveStats.jumpCoyoteTime;
         }
         else
         {
-            coyoteTimer = playerMoveStats.jumpCoyoteTime;
+            coyoteTimer -= Time.deltaTime;
         }
 
         if (isJumping)

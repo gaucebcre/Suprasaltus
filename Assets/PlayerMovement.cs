@@ -1,7 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.Burst.Intrinsics;
-using Unity.VisualScripting.Antlr3.Runtime.Tree;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
@@ -10,345 +8,412 @@ public class PlayerMovement : MonoBehaviour
     public PlayerMovementStats playerMoveStats;
     [SerializeField] private Collider2D playerCollider;
 
-    Rigidbody2D rb2d;
+    private Rigidbody2D rb2d;
 
-    // movement variables
-    Vector2 moveVelocity;
-    bool isFacingRight;
+    // Movement variables
+    private Vector2 moveVelocity;
+    private bool isFacingRight = true;
 
-    // collision variables
-    [SerializeField] bool isGrounded = false;
-    [SerializeField] ContactFilter2D isGroundedContactFilter;
-    [SerializeField] bool bumpedHead;
-    [SerializeField] ContactFilter2D bumpedHeadContactFilter;
+    // Collision variables
+    [SerializeField] private bool isGrounded = false;
+    [SerializeField] private ContactFilter2D isGroundedContactFilter2D;
+    [SerializeField] private bool bumpedHead;
+    [SerializeField] private ContactFilter2D bumpedHeadContactFilter2D;
 
-    // jump variables
+    // Jump variables
     public float verticalVelocity { get; private set; }
-    [SerializeField] bool isJumping;
-    [SerializeField] float jumpTime;
-    [SerializeField] bool doJumpCut;
-    [SerializeField] bool isFalling;
-    [SerializeField] float jumpCutTime;
-    [SerializeField] float jumpCutReleaseSpeed;
-    [SerializeField] int numberOfJumpsUsed;
+    [SerializeField] private bool isJumping;
+    [SerializeField] private bool doJumpCut; // jumpCut means: start going down when player release
+    [SerializeField] private bool isFalling;
+    [SerializeField] private float jumpCutTime; // delay to start going down
+    [SerializeField] private float jumpCutReleaseSpeed;
+    [SerializeField] private int numberOfJumpsUsed;
 
-    // apex variables
-    float apexPoint;
-    float timePastApexThreshold;
-    bool isPastApexThreshhold;
+    // Apex variables
+    private float apexPoint; // even if player didn't release, this will make it go down
+    private float timePastApexThreshold;
+    private bool isPastApexThreshold;
 
-    // jump buffer variables
-    float jumpBufferTimer;
-    bool jumpReleaseDuringBuffer;
+    // Jump buffer variables
+    private float jumpBufferTimer;
+    private bool jumpReleaseDuringBuffer;
 
-    // coyote time variables
-    float coyoteTimer;
-
-    // animation variables
+    // Coyote time variables
+    private float coyoteTimer;
 
     #region Unity Methods
     void Awake()
     {
-        isFacingRight = true;
-
         rb2d = GetComponent<Rigidbody2D>();
-
     }
 
     void Start()
     {
-        // if default, initialize ContactFilters (they keep resetting, so here)
-        if (isGroundedContactFilter.Equals(new ContactFilter2D()))
-        {
-            isGroundedContactFilter.SetLayerMask(playerMoveStats.groundLayerMask);
-            isGroundedContactFilter.SetNormalAngle(45f, 135f);
-        }
-        if (bumpedHeadContactFilter.Equals(new ContactFilter2D()))
-        {
-            bumpedHeadContactFilter.SetLayerMask(playerMoveStats.groundLayerMask);
-            bumpedHeadContactFilter.SetNormalAngle(225f, 315f);
-        }
+        InitializeContactFilters();
     }
 
     void Update()
     {
-        DoTimers();
-        JumpChecks();
+        UpdateTimers();
+        HandleJumpInput();
     }
 
     void FixedUpdate()
     {
-        CollisionChecks();
-        Jump();
+        CheckCollisions();
+        ProcessJump();
+        ProcessMovement();
+    }
+    #endregion
 
-        if (isGrounded)
+    #region Initialization
+    private void InitializeContactFilters()
+    {
+        // if default, initialize ContactFilters (they keep resetting, so here)
+
+        if (isGroundedContactFilter2D.Equals(new ContactFilter2D()))
         {
-            Move(playerMoveStats.groundAcceleration, playerMoveStats.groundDeceleration, InputManager.movementDirection);
+            isGroundedContactFilter2D.SetLayerMask(playerMoveStats.groundLayerMask);
+            isGroundedContactFilter2D.SetNormalAngle(45f, 135f);
         }
-        else // airborne
+
+        if (bumpedHeadContactFilter2D.Equals(new ContactFilter2D()))
         {
-            Move(playerMoveStats.airAcceleration, playerMoveStats.airDeceleration, InputManager.movementDirection);
+            bumpedHeadContactFilter2D.SetLayerMask(playerMoveStats.groundLayerMask);
+            bumpedHeadContactFilter2D.SetNormalAngle(225f, 315f);
         }
     }
     #endregion
 
     #region Movement Methods
-    void Move(float acceleration, float deceleration, Vector2 moveInput)
+    private void ProcessMovement()
+    {
+        if (isGrounded)
+        {
+            Move(playerMoveStats.groundAcceleration, playerMoveStats.groundDeceleration, InputManager.movementDirection);
+        }
+        else // isAirborne
+        {
+            Move(playerMoveStats.airAcceleration, playerMoveStats.airDeceleration, InputManager.movementDirection);
+        }
+    }
+
+    private void Move(float acceleration, float deceleration, Vector2 moveInput)
     {
         if (moveInput != Vector2.zero)
         {
-            if (TurnCheck(moveInput.x))
-            {
-                Turn();
-            }
-
-            Vector2 targetVel = Vector2.zero;
-            targetVel = new Vector2(moveInput.x, 0f) * playerMoveStats.maxWalkSpeed;
-
-            moveVelocity = Vector2.Lerp(moveVelocity, targetVel, acceleration * Time.fixedDeltaTime);
-            rb2d.velocity = new Vector2(moveVelocity.x, rb2d.velocity.y);
-
-
+            HandleMovementInput(moveInput, acceleration);
         }
-        else if (moveInput == Vector2.zero)
+        else
         {
-            moveVelocity = Vector2.Lerp(moveVelocity, Vector2.zero, deceleration * Time.fixedDeltaTime);
-            rb2d.velocity = new Vector2(moveVelocity.x, rb2d.velocity.y);
+            HandleDeceleration(deceleration);
         }
     }
 
-    bool TurnCheck(float moveInputX)
+    private void HandleMovementInput(Vector2 moveInput, float acceleration)
     {
-        if ((isFacingRight && moveInputX < 0) || (!isFacingRight && moveInputX > 0))
+        if (ShouldTurn(moveInput.x))
         {
-            return true;
+            Turn();
         }
-        return false;
+
+        Vector2 targetVelocity = new Vector2(moveInput.x, 0f) * playerMoveStats.maxWalkSpeed;
+        moveVelocity = Vector2.Lerp(moveVelocity, targetVelocity, acceleration * Time.fixedDeltaTime);
+        rb2d.velocity = new Vector2(moveVelocity.x, rb2d.velocity.y);
     }
 
-    void Turn() // player must always start facing right
+    private void HandleDeceleration(float deceleration)
+    {
+        moveVelocity = Vector2.Lerp(moveVelocity, Vector2.zero, deceleration * Time.fixedDeltaTime);
+        rb2d.velocity = new Vector2(moveVelocity.x, rb2d.velocity.y);
+    }
+
+    private bool ShouldTurn(float moveInputX)
+    {
+        return (isFacingRight && moveInputX < 0) || (!isFacingRight && moveInputX > 0);
+    }
+
+    private void Turn() // player must always START facing right
     {
         // https://stackoverflow.com/questions/26568542/flipping-a-2d-sprite-animation-in-unity-2d#26577124 
-        Vector3 theScale = transform.localScale;
-        theScale.x *= -1;
-        transform.localScale = theScale;
+        isFacingRight = !isFacingRight;
+        Vector3 scale = transform.localScale;
+        scale.x *= -1;
+        transform.localScale = scale;
     }
-
-
     #endregion
 
-    #region Jump
-    void JumpChecks()
+    #region Jump methods
+    private void HandleJumpInput()
+    {
+        ProcessJumpPress();
+        ProcessJumpRelease();
+        ProcessJumpExecution();
+        ProcessLanding();
+    }
+
+    private void ProcessJumpPress()
     {
         if (InputManager.jumpPressed)
         {
+            // from now on, instead of checking for input, we check for bufferTimer
             jumpBufferTimer = playerMoveStats.jumpBufferTime;
             jumpReleaseDuringBuffer = false;
         }
+    }
 
-        // from now on, instead of checking for input, we check for bufferTimer
-        bool jumpWasBuffered = jumpBufferTimer > 0f ? true : false;
+    private void ProcessJumpRelease()
+    {
+        if (!InputManager.jumpReleased) return;
 
-        if (InputManager.jumpReleased)
+        bool jumpWasBuffered = jumpBufferTimer > 0f;
+        if (jumpWasBuffered)
+            jumpReleaseDuringBuffer = true;
+
+        if (CanCutJump())
         {
-            if (jumpWasBuffered)
-                jumpReleaseDuringBuffer = true;
-
-            bool isMovingUp = verticalVelocity > 0f;
-            if (isJumping && isMovingUp) //playerMoveStats.minJumpCutVelocity
-            {
-                if (isPastApexThreshhold)
-                {
-                    isPastApexThreshhold = false;
-                    doJumpCut = true;
-                    jumpCutTime = playerMoveStats.timeForUpwardsCancel;
-                    verticalVelocity = 0f;
-                }
-                else
-                {
-                    doJumpCut = true;
-                    jumpCutReleaseSpeed = verticalVelocity;
-                }
-            }
-        }
-
-        // grounded jump
-        bool theresCoyoteTimeLeft = coyoteTimer > 0f;
-        bool hasJumps = numberOfJumpsUsed < playerMoveStats.numberOfJumpsAllowed;
-        if (jumpWasBuffered && !isJumping && (isGrounded || theresCoyoteTimeLeft))
-        {
-            InitiateJump(1);
-
-            if (jumpReleaseDuringBuffer)
-            {
-                doJumpCut = true; // trigger jump cut
-                jumpCutReleaseSpeed = verticalVelocity;
-            }
-        }
-        else // air jump
-        if (jumpWasBuffered && isJumping && hasJumps)
-        {
-            doJumpCut = false;
-            InitiateJump(2);
-
-            if (jumpReleaseDuringBuffer) // needed to tap air jump
-            {
-                doJumpCut = true; // trigger jump cut
-                jumpCutReleaseSpeed = verticalVelocity;
-            }
-        }
-
-        // landing
-        bool isMovingDownOrStopped = verticalVelocity <= 0f;
-        if ((isJumping || isFalling) && isGrounded && isMovingDownOrStopped)
-        {
-            isJumping = false;
-            isFalling = false;
-            doJumpCut = false;
-            jumpCutTime = 0f;
-            isPastApexThreshhold = false;
-            numberOfJumpsUsed = 0;
-
-            verticalVelocity = Physics2D.gravity.y;
+            ExecuteJumpCut();
         }
     }
 
-    void InitiateJump(int jumps)
+    private bool CanCutJump()
+    {
+        return isJumping && verticalVelocity > 0f;
+    }
+
+    private void ExecuteJumpCut()
+    {
+        if (isPastApexThreshold)
+        {
+            isPastApexThreshold = false;
+            doJumpCut = true;
+            jumpCutTime = playerMoveStats.timeForUpwardsCancel;
+            verticalVelocity = 0f;
+        }
+        else
+        {
+            doJumpCut = true;
+            jumpCutReleaseSpeed = verticalVelocity;
+        }
+    }
+
+    private void ProcessJumpExecution()
+    {
+        bool jumpWasBuffered = jumpBufferTimer > 0f;
+
+        if (CanGroundJump(jumpWasBuffered))
+        {
+            InitiateJump(1);
+            if (jumpReleaseDuringBuffer)
+            {
+                doJumpCut = true;
+                jumpCutReleaseSpeed = verticalVelocity;
+            }
+        }
+        else if (CanAirJump(jumpWasBuffered))
+        {
+            doJumpCut = false;
+            InitiateJump(2);
+            if (jumpReleaseDuringBuffer)
+            {
+                doJumpCut = true;
+                jumpCutReleaseSpeed = verticalVelocity;
+            }
+        }
+    }
+
+    private bool CanGroundJump(bool jumpWasBuffered)
+    {
+        bool theresCoyoteTimeLeft = coyoteTimer > 0f;
+        return jumpWasBuffered && !isJumping && (isGrounded || theresCoyoteTimeLeft);
+    }
+
+    private bool CanAirJump(bool jumpWasBuffered)
+    {
+        bool hasJumps = numberOfJumpsUsed < playerMoveStats.numberOfJumpsAllowed;
+        return jumpWasBuffered && isJumping && hasJumps;
+    }
+
+    private void ProcessLanding()
+    {
+        bool isMovingDownOrStopped = verticalVelocity <= 0f;
+        if ((isJumping || isFalling) && isGrounded && isMovingDownOrStopped)
+        {
+            ResetJumpState();
+        }
+    }
+
+    private void InitiateJump(int jumps)
     {
         if (!isJumping)
             isJumping = true;
+
         jumpBufferTimer = 0f;
-        jumpTime = 0f;
-        jumpReleaseDuringBuffer = false; // to control air jump height
+        jumpReleaseDuringBuffer = false;
         numberOfJumpsUsed += jumps;
         verticalVelocity = playerMoveStats.initialJumpVelocity;
     }
 
-    void Jump()
+    private void ResetJumpState()
+    {
+        isJumping = false;
+        isFalling = false;
+        doJumpCut = false;
+        jumpCutTime = 0f;
+        isPastApexThreshold = false;
+        numberOfJumpsUsed = 0;
+        verticalVelocity = Physics2D.gravity.y;
+    }
+
+    private void ProcessJump()
     {
         if (isJumping)
         {
-            if (bumpedHead)
-            {
-                doJumpCut = true;
-            }
-
-            // gravity ascending
-            if (verticalVelocity >= 0f)
-            {
-                // apex
-                apexPoint = Mathf.InverseLerp(playerMoveStats.initialJumpVelocity, 0f, verticalVelocity);
-
-                if (apexPoint > playerMoveStats.apexThreshhold)
-                {
-                    if (!isPastApexThreshhold)
-                    {
-                        isPastApexThreshhold = true;
-                        timePastApexThreshold = 0f;
-                    }
-
-                    if (isPastApexThreshhold)
-                    {
-                        timePastApexThreshold += Time.fixedDeltaTime;
-                        if (timePastApexThreshold < playerMoveStats.apexHangTime)
-                        {
-                            verticalVelocity = 0f;
-                        }
-                        else
-                        {
-                            verticalVelocity = -0.01f;
-                        }
-                    }
-                }
-                else // gravity ascending before apex
-                {
-                    verticalVelocity += playerMoveStats.gravity * Time.fixedDeltaTime;
-                    if (isPastApexThreshhold)
-                    {
-                        isPastApexThreshhold = false;
-                    }
-                }
-            }
-            else // gravity descending
-            if (!doJumpCut)
-            { // TODO: test without gravityonreleasemulti
-                verticalVelocity += playerMoveStats.gravity * playerMoveStats.gravityOnReleaseMultiplier * Time.fixedDeltaTime;
-            }
-            else // falling
-            if (verticalVelocity < 0f)
-            {
-                if (!doJumpCut)
-                {
-                    doJumpCut = true;
-                }
-            }
+            ProcessJumpPhysics();
         }
 
-        // jump cut (will wait until the minimum height)
-        bool reachedMinimumJumpHeight = jumpTime > playerMoveStats.timeTillJumpApex * playerMoveStats.minJumpCutPercent;
-        if (doJumpCut)
+        ProcessJumpCut();
+        ProcessFalling();
+        ClampFallSpeed();
+        ApplyVerticalVelocity();
+    }
+
+    private void ProcessJumpPhysics()
+    {
+        if (bumpedHead)
         {
-            if (jumpCutTime >= playerMoveStats.timeForUpwardsCancel)
-            {
-                verticalVelocity += playerMoveStats.gravity * playerMoveStats.gravityOnReleaseMultiplier * Time.fixedDeltaTime;
-            }
-            else
-            if (jumpCutTime < playerMoveStats.timeForUpwardsCancel)
-            {
-                verticalVelocity = Mathf.Lerp(jumpCutReleaseSpeed, 0f, (jumpCutTime / playerMoveStats.timeForUpwardsCancel));
-            }
-
-            jumpCutTime += Time.fixedDeltaTime;
+            doJumpCut = true;
         }
 
-        // normal falling gravity
+        if (verticalVelocity >= 0f)
+        {
+            ProcessAscendingJump();
+        }
+        else if (!doJumpCut)
+        {
+            ProcessDescendingJump();
+        }
+        else if (verticalVelocity < 0f && !doJumpCut)
+        {
+            doJumpCut = true;
+        }
+    }
+
+    private void ProcessAscendingJump()
+    {
+        apexPoint = Mathf.InverseLerp(playerMoveStats.initialJumpVelocity, 0f, verticalVelocity);
+
+        if (apexPoint > playerMoveStats.apexThreshhold)
+        {
+            ProcessApexHang();
+        }
+        else
+        {
+            verticalVelocity += playerMoveStats.gravity * Time.fixedDeltaTime;
+            if (isPastApexThreshold)
+            {
+                isPastApexThreshold = false;
+            }
+        }
+    }
+
+    private void ProcessApexHang()
+    {
+        if (!isPastApexThreshold)
+        {
+            isPastApexThreshold = true;
+            timePastApexThreshold = 0f;
+        }
+
+        timePastApexThreshold += Time.fixedDeltaTime;
+
+        if (timePastApexThreshold < playerMoveStats.apexHangTime)
+        {
+            verticalVelocity = 0f;
+        }
+        else
+        {
+            verticalVelocity = -0.01f;
+        }
+    }
+
+    private void ProcessDescendingJump()
+    {
+        verticalVelocity += playerMoveStats.gravity * playerMoveStats.gravityOnReleaseMultiplier * Time.fixedDeltaTime;
+    }
+
+    private void ProcessJumpCut()
+    {
+        if (!doJumpCut) return;
+
+        if (jumpCutTime >= playerMoveStats.timeForUpwardsCancel)
+        {
+            verticalVelocity += playerMoveStats.gravity * playerMoveStats.gravityOnReleaseMultiplier * Time.fixedDeltaTime;
+        }
+        else
+        {
+            verticalVelocity = Mathf.Lerp(jumpCutReleaseSpeed, 0f, jumpCutTime / playerMoveStats.timeForUpwardsCancel);
+        }
+
+        jumpCutTime += Time.fixedDeltaTime;
+    }
+
+    private void ProcessFalling()
+    {
         if (!isGrounded && !isJumping)
         {
             if (!isFalling)
             {
                 isFalling = true;
             }
-            Debug.Log("falling normally");
 
             verticalVelocity += playerMoveStats.gravity * playerMoveStats.gravityOnLedgeFall * Time.fixedDeltaTime;
         }
-
-        // clamp fall speed
-        verticalVelocity = Mathf.Clamp(verticalVelocity, -playerMoveStats.maxFallSpeed, 50f);
-
-        rb2d.velocity = new Vector2(rb2d.velocity.x, verticalVelocity);
     }
 
+    private void ClampFallSpeed()
+    {
+        verticalVelocity = Mathf.Clamp(verticalVelocity, -playerMoveStats.maxFallSpeed, 50f);
+    }
+
+    private void ApplyVerticalVelocity()
+    {
+        rb2d.velocity = new Vector2(rb2d.velocity.x, verticalVelocity);
+    }
     #endregion
 
     #region Collision Methods
-
-
-    void CollisionChecks()
+    private void CheckCollisions()
     {
-        IsGrounded();
-        BumpedHead();
+        CheckGrounded();
+        CheckHeadBump();
     }
 
-    void BumpedHead()
+    private void CheckHeadBump()
     {
-        bumpedHead = rb2d.IsTouching(bumpedHeadContactFilter);
+        bumpedHead = rb2d.IsTouching(bumpedHeadContactFilter2D);
     }
 
-    void IsGrounded()
+    private void CheckGrounded()
     {
-        isGrounded = rb2d.IsTouching(isGroundedContactFilter);
+        isGrounded = rb2d.IsTouching(isGroundedContactFilter2D);
     }
-
-
     #endregion
 
     #region Timers
+    private void UpdateTimers()
+    {
+        UpdateJumpBufferTimer();
+        UpdateCoyoteTimer();
+    }
 
-    void DoTimers()
+    private void UpdateJumpBufferTimer()
     {
         jumpBufferTimer -= Time.deltaTime;
+    }
 
+    private void UpdateCoyoteTimer()
+    {
         if (isGrounded)
         {
             coyoteTimer = playerMoveStats.jumpCoyoteTime;
@@ -357,13 +422,6 @@ public class PlayerMovement : MonoBehaviour
         {
             coyoteTimer -= Time.deltaTime;
         }
-
-        if (isJumping)
-        {
-            jumpTime += Time.fixedDeltaTime;
-        }
     }
-
     #endregion
-
 }

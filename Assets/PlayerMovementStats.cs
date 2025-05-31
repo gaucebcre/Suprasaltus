@@ -55,7 +55,7 @@ public class PlayerMovementStats : ScriptableObject
     // public float minJumpCutVelocity { get; private set; }
     public float adjustedJumpHeight { get; private set; }
 
-    void OnValidate()
+    void OnValidate() // editor update
     {
         CalculateValues();
     }

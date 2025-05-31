@@ -44,8 +44,6 @@ public class PlayerMovement : MonoBehaviour
     // coyote time variables
     float coyoteTimer;
 
-    // animation variables
-
     #region Unity Methods
     void Awake()
     {

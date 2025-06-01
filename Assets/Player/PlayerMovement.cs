@@ -138,7 +138,7 @@ public class PlayerMovement : MonoBehaviour
         // https://stackoverflow.com/questions/26568542/flipping-a-2d-sprite-animation-in-unity-2d#26577124 
         isFacingRight = !isFacingRight;
         Vector3 scale = transform.localScale;
-        scale.x *= -1;
+        scale.x *= -1; // only x 
         transform.localScale = scale;
     }
     #endregion

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bd72e6c925a0ea47b2c6b01e35bd08e, type: 3}
   m_Name: Player Movement Stats 1 Slow
   m_EditorClassIdentifier: 
-  maxWalkSpeed: 3
+  maxWalkSpeed: 1
   groundAcceleration: 100
   groundDeceleration: 100
   airAcceleration: 100
@@ -33,8 +33,3 @@ MonoBehaviour:
   apexHangTime: 0.075
   jumpBufferTime: 0.125
   jumpCoyoteTime: 0.05
-  showWalkJumpArc: 0
-  stopOnCollision: 0
-  drawRight: 0
-  arcResolution: 10
-  visualizationSteps: 90

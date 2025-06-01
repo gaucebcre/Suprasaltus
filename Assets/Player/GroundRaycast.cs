@@ -1,34 +1,32 @@
 using UnityEngine;
 
 public class GroundRaycast : MonoBehaviour
-{   // TODO: estoy inviertiendo los hinges, a ver si funciona
+{
     [Header("Raycast Settings")]
     [SerializeField] private float rayLength = 1f;
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private Color rayColor = Color.red;
 
     [Header("Output")]
-    [SerializeField] private Vector3 groundHitPosition;
-    [SerializeField] private bool isGrounded;
+    [SerializeField] public Vector2 groundHitPosition;
+    [SerializeField] public bool seesFloor;
 
     void Update()
     {
-        // Create a ray pointing downward from this object's position
-        Ray ray = new Ray(transform.position, Vector3.down);
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, rayLength, groundLayer);
 
-        if (Physics.Raycast(ray, out RaycastHit hit, rayLength, groundLayer))
+        if (hit.collider != null)
         {
-            isGrounded = true;
+            seesFloor = true;
             groundHitPosition = hit.point;
         }
         else
         {
-            isGrounded = false;
-            groundHitPosition = Vector3.zero;
+            seesFloor = false;
         }
     }
 
-    // Visualize the ray in the editor
+    // debug ray
     void OnDrawGizmos()
     {
         Gizmos.color = rayColor;

@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bd72e6c925a0ea47b2c6b01e35bd08e, type: 3}
+  m_Name: Meat Boy Stats
+  m_EditorClassIdentifier: 
+  statsName: Meat Boy
+  maxWalkSpeed: 100
+  groundAcceleration: 5
+  groundDeceleration: 20
+  airAcceleration: 5
+  airDeceleration: 5
+  groundLayerMask:
+    serializedVersion: 2
+    m_Bits: 0
+  jumpHeight: 6.5
+  jumpHeightCompensationFactor: 1.05
+  timeTillJumpApex: 0.4
+  gravityOnReleaseMultiplier: 2
+  gravityOnLedgeFall: 2
+  maxFallSpeed: 26
+  numberOfJumpsAllowed: 2
+  timeForUpwardsCancel: 0.027
+  minJumpCutPercent: 0.5
+  apexThreshhold: 0.97
+  apexHangTime: 0.075
+  jumpBufferTime: 0.125
+  jumpCoyoteTime: 0.125

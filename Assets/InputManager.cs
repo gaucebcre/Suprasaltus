@@ -11,9 +11,11 @@ public class InputManager : MonoBehaviour
     public static bool jumpPressed;
     public static bool jumpHeld;
     public static bool jumpReleased;
+    public static bool menuPressed;
 
     InputAction moveAction;
     InputAction jumpAction;
+    InputAction menuAction;
 
     void Awake()
     {
@@ -21,6 +23,7 @@ public class InputManager : MonoBehaviour
 
         moveAction = playerInputComponent.actions["Move"];
         jumpAction = playerInputComponent.actions["Jump"];
+        menuAction = playerInputComponent.actions["Menu"];
     }
 
     void Start()
@@ -35,5 +38,6 @@ public class InputManager : MonoBehaviour
         jumpPressed = jumpAction.WasPressedThisFrame();
         jumpHeld = jumpAction.IsPressed();
         jumpReleased = jumpAction.WasReleasedThisFrame();
+        menuPressed = menuAction.WasPressedThisFrame();
     }
 }

@@ -8,6 +8,9 @@ using UnityEngine;
 public class PlayerMovementStats : ScriptableObject
 {
     // This should be only referenced in PlayerMovement.cs, and only once
+    // DON'T CHANGUE NAME OF ANY VARIABLE
+
+    [SerializeField] public string statsName;
 
     [Header("Walk")]
     [Range(1f, 100f)] public float maxWalkSpeed = 12.5f;
@@ -21,7 +24,6 @@ public class PlayerMovementStats : ScriptableObject
 
     [Header("Jump")]
     public float jumpHeight = 6.5f;
-    // public float minimumJumpHeight = 4f;
     [Range(1f, 1.1f)] public float jumpHeightCompensationFactor = 1.05f;
     public float timeTillJumpApex = 0.4f;
     [Range(0.01f, 5f)] public float gravityOnReleaseMultiplier = 2f;

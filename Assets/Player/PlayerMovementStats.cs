@@ -11,6 +11,7 @@ public class PlayerMovementStats : ScriptableObject
     // DON'T CHANGUE NAME OF ANY VARIABLE
 
     [SerializeField] public string statsName;
+    [SerializeField] public bool walkAnimation = false;
 
     [Header("Walk")]
     [Range(1f, 100f)] public float maxWalkSpeed = 12.5f;

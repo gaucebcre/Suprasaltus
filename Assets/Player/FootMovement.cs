@@ -5,6 +5,7 @@ public class FootMovement : MonoBehaviour
     [Header("References")]
     [SerializeField] private GroundRaycast backRaycast;
     [SerializeField] private GroundRaycast frontRaycast;
+    [SerializeField] private Transform playerCenter;
 
     [Header("Configuration")]
     [SerializeField] private float stepDuration = 0.3f;
@@ -19,6 +20,8 @@ public class FootMovement : MonoBehaviour
 
     void Update()
     {
+        transform.localScale = playerCenter.localScale; // flip feet too
+
         if (isMoving)
         {
             PerformStep();

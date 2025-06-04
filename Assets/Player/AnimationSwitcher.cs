@@ -4,43 +4,48 @@ using UnityEngine;
 
 public class AnimationSwitcher : MonoBehaviour
 {
-    [SerializeField] private GameObject[] objects;
-    bool activeState;
+    [SerializeField] private GameObject[] objectsToEnable;
+    [SerializeField] private GameObject[] objectsToDisable;
+    bool localActiveState = true;
 
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
     void Update()
     {
-        bool walkAnimationState = GetComponent<PlayerMovementStats>().walkAnimation;
-        if (!activeState && walkAnimationState)
+        bool walkAnimationState = GetComponent<PlayerMovement>().playerMoveStats.walkAnimation;
+        if (!localActiveState && walkAnimationState)
         {
-            activeState = true;
+            localActiveState = true;
             EnableAnimationObjs();
         }
-        if (activeState && !walkAnimationState)
+        if (localActiveState && !walkAnimationState)
         {
-            activeState = false;
+            localActiveState = false;
             DisableAnimationObjs();
         }
     }
 
     void DisableAnimationObjs()
     {
-        foreach (GameObject obj in objects)
+        foreach (GameObject obj in objectsToDisable)
         {
             obj.SetActive(false);
+        }
+
+        foreach (GameObject obj in objectsToEnable)
+        {
+            obj.SetActive(true);
         }
     }
 
     void EnableAnimationObjs()
     {
-        foreach (GameObject obj in objects)
+        foreach (GameObject obj in objectsToDisable)
         {
             obj.SetActive(true);
+        }
+
+        foreach (GameObject obj in objectsToEnable)
+        {
+            obj.SetActive(false);
         }
     }
 }

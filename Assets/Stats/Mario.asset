@@ -10,24 +10,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6bd72e6c925a0ea47b2c6b01e35bd08e, type: 3}
-  m_Name: Mario Stats
+  m_Name: Mario
   m_EditorClassIdentifier: 
   statsName: Mario
-  maxWalkSpeed: 1
-  groundAcceleration: 5
-  groundDeceleration: 20
-  airAcceleration: 5
-  airDeceleration: 5
+  walkAnimation: 0
+  maxWalkSpeed: 5
+  groundAcceleration: 3
+  groundDeceleration: 3
+  airAcceleration: 3
+  airDeceleration: 3
   groundLayerMask:
     serializedVersion: 2
-    m_Bits: 0
-  jumpHeight: 6.5
+    m_Bits: 1
+  jumpHeight: 4
   jumpHeightCompensationFactor: 1.05
-  timeTillJumpApex: 0.4
+  timeTillJumpApex: 0.8
   gravityOnReleaseMultiplier: 2
-  gravityOnLedgeFall: 2
+  gravityOnLedgeFall: 0.5
   maxFallSpeed: 26
-  numberOfJumpsAllowed: 2
+  numberOfJumpsAllowed: 1
   timeForUpwardsCancel: 0.027
   minJumpCutPercent: 0.5
   apexThreshhold: 0.97

@@ -10,27 +10,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6bd72e6c925a0ea47b2c6b01e35bd08e, type: 3}
-  m_Name: Modificacion Libre Stats
+  m_Name: Suprasaltus
   m_EditorClassIdentifier: 
-  statsName: "Modificaci\xF3n Libre"
-  maxWalkSpeed: 12.5
-  groundAcceleration: 5
-  groundDeceleration: 20
-  airAcceleration: 31.877287
-  airDeceleration: 47.6
+  statsName: Suprasaltus
+  walkAnimation: 0
+  maxWalkSpeed: 6
+  groundAcceleration: 30
+  groundDeceleration: 40
+  airAcceleration: 30
+  airDeceleration: 40
   groundLayerMask:
     serializedVersion: 2
-    m_Bits: 0
-  jumpHeight: 6.5
+    m_Bits: 1
+  jumpHeight: 3
   jumpHeightCompensationFactor: 1.05
-  timeTillJumpApex: 0.4
-  gravityOnReleaseMultiplier: 2
-  gravityOnLedgeFall: 2
+  timeTillJumpApex: 0.3
+  gravityOnReleaseMultiplier: 0.5
+  gravityOnLedgeFall: 0.25
   maxFallSpeed: 26
   numberOfJumpsAllowed: 2
   timeForUpwardsCancel: 0.027
-  minJumpCutPercent: 0.33743542
+  minJumpCutPercent: 0.5
   apexThreshhold: 0.97
-  apexHangTime: 0.075
+  apexHangTime: 0.03
   jumpBufferTime: 0.125
   jumpCoyoteTime: 0.125

@@ -24,12 +24,12 @@ public class PlayerMovementStats : ScriptableObject
     public LayerMask groundLayerMask;
 
     [Header("Jump")]
-    public float jumpHeight = 6.5f;
+    [Range(1f, 100f)] public float jumpHeight = 6.5f;
     [Range(1f, 1.1f)] public float jumpHeightCompensationFactor = 1.05f;
-    public float timeTillJumpApex = 0.4f;
+    [Range(0.01f, 5f)] public float timeTillJumpApex = 0.4f;
     [Range(0.01f, 5f)] public float gravityOnReleaseMultiplier = 2f;
     [Range(0.01f, 5f)] public float gravityOnLedgeFall = 2f;
-    public float maxFallSpeed = 26f;
+    [Range(1f, 100f)] public float maxFallSpeed = 26f;
     [Range(1f, 5f)] public int numberOfJumpsAllowed = 2;
 
     [Header("Jump Cut")]

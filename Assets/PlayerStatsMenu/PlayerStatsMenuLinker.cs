@@ -10,8 +10,8 @@ public class PlayerStatsMenuLinker : MonoBehaviour
 
     [SerializeField] private TMP_Dropdown dropdown;
     [SerializeField] private List<PlayerMovementStats> statsList;
-    [SerializeField] private PlayerStatsMenuLinker linker;
-    [SerializeField] private PlayerMovement playerMovement;
+    private PlayerStatsMenuLinker linker;
+    private PlayerMovement playerMovement;
 
 
     void Start()

@@ -2538,12 +2538,13 @@ MonoBehaviour:
   stats: {fileID: 0}
   dropdown: {fileID: 863689190}
   statsList:
-  - {fileID: 11400000, guid: ffd2b63b9bc6eb04f91552fece40fce5, type: 2}
+  - {fileID: 11400000, guid: c03c68ec0e159994396bbab9cb3165b9, type: 2}
   - {fileID: 11400000, guid: 5fe03ff0192160f45b75387cb311bb65, type: 2}
-  - {fileID: 11400000, guid: 7f45d34a378419e429ee645a3b82b67b, type: 2}
-  - {fileID: 11400000, guid: cefad68ac1791af42887cccc281d3409, type: 2}
+  - {fileID: 11400000, guid: 674d51c4c4fdd344d864e3cdf4d078f7, type: 2}
+  - {fileID: 11400000, guid: f0770e4eac3491047b30baa987208193, type: 2}
+  - {fileID: 11400000, guid: 5fbdb60b132fe1c4dbfda1827adb3ce9, type: 2}
+  - {fileID: 11400000, guid: 5d04f0b7b1d0b1145ac35d88640f6681, type: 2}
   - {fileID: 11400000, guid: fdb0b9a3dc7cc6b4f8611e1ddc73dc5a, type: 2}
-  linker: {fileID: 0}
 --- !u!1001 &1038226598
 PrefabInstance:
   m_ObjectHideFlags: 0

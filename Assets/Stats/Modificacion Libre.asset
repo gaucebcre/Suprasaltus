@@ -10,17 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6bd72e6c925a0ea47b2c6b01e35bd08e, type: 3}
-  m_Name: Megaman Stats
+  m_Name: Modificacion Libre
   m_EditorClassIdentifier: 
-  statsName: Megaman
-  maxWalkSpeed: 72.4
+  statsName: "Modificaci\xF3n Libre"
+  walkAnimation: 0
+  maxWalkSpeed: 12.5
   groundAcceleration: 5
   groundDeceleration: 20
-  airAcceleration: 5
-  airDeceleration: 5
+  airAcceleration: 31.877287
+  airDeceleration: 47.6
   groundLayerMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 1
   jumpHeight: 6.5
   jumpHeightCompensationFactor: 1.05
   timeTillJumpApex: 0.4
@@ -29,7 +30,7 @@ MonoBehaviour:
   maxFallSpeed: 26
   numberOfJumpsAllowed: 2
   timeForUpwardsCancel: 0.027
-  minJumpCutPercent: 0.5
+  minJumpCutPercent: 0.33743542
   apexThreshhold: 0.97
   apexHangTime: 0.075
   jumpBufferTime: 0.125
